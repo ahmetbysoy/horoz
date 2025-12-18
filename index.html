@@ -1,70 +1,495 @@
 <!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Horoz İmparatorluğu: Cyber Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap');
-      body {
-        font-family: 'Rajdhani', sans-serif;
-        background-color: #050505;
-        color: #e0e0e0;
-        overflow: hidden;
-        overscroll-behavior: none;
-      }
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #1a1a1a; }
-      ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-      
-      @keyframes fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-      .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
-      
-      @keyframes slide-up { 
-        0% { transform: translateY(100%); opacity: 0; }
-        10% { transform: translateY(0); opacity: 1; }
-        90% { transform: translateY(0); opacity: 1; }
-        100% { transform: translateY(-100%); opacity: 0; }
-      }
-      .animate-slide-up { animation: slide-up 5s linear infinite; }
-
-      .scanlines {
-        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.05));
-        background-size: 100% 3px;
-        position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9999; pointer-events: none; opacity: 0.2;
-      }
-      
-      .vignette {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        box-shadow: 0 0 150px rgba(0,0,0,0.9) inset; pointer-events: none; z-index: 9998;
-      }
-
-      .crt-flicker {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(18, 16, 16, 0.1); opacity: 0; pointer-events: none; z-index: 9997;
-        animation: flicker 0.15s infinite;
-      }
-      @keyframes flicker {
-        0% { opacity: 0.1; }
-        50% { opacity: 0.2; }
-        100% { opacity: 0.1; }
-      }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #050505;
+            color: #e0e0e0;
+            overflow: hidden;
+            margin: 0;
+            overscroll-behavior: none;
+        }
+        .scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.05));
+            background-size: 100% 3px;
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9999; pointer-events: none; opacity: 0.2;
+        }
+        .vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: 0 0 150px rgba(0,0,0,0.9) inset; pointer-events: none; z-index: 9998;
+        }
+        @keyframes slide-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+        .glitch-text { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+        
+        /* Savaş Animasyonları */
+        @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } }
+        .animate-shake { animation: shake 0.2s infinite; }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "vite": "https://esm.sh/vite@^7.3.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
-  <body>
+<body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+        // --- SABİTLER ---
+        const DISTRICTS = [
+            { id: 'd1', name: 'Tarlabaşı Çukuru', difficulty: 1, boss: 'Jilet Hasan', description: 'Başlangıç bölgesi. Tekinsiz ama ucuz.' },
+            { id: 'd2', name: 'Dolapdere Yokuşu', difficulty: 2, boss: 'Kasap Nuri', description: 'Mekanikler ve hurdacılar diyarı.' },
+            { id: 'd5', name: 'Karaköy Limanı', difficulty: 5, boss: 'Zincir Kıran', description: 'İthal horozların giriş kapısı.' },
+            { id: 'd10', name: 'Bağcılar Meydan', difficulty: 10, boss: 'Apaçi Serkan', description: 'Hızlı ve öfkeli horozlar.' }
+        ];
+
+        const ITEMS = [
+            { id: 'f1', name: 'Mısır Kırması', type: 'FOOD', value: 20, price: 50, icon: '🌽' },
+            { id: 'f2', name: 'Protein Tozu', type: 'FOOD', value: 50, price: 150, icon: '💪' },
+            { id: 'e1', name: 'Sıradan Yumurta', type: 'EGG', rank: 'COMMON', price: 500, icon: '🥚' },
+            { id: 'e2', name: 'Nadir Yumurta', type: 'EGG', rank: 'RARE', price: 2000, icon: '💎' }
+        ];
+
+        // --- YARDIMCI ARAÇLAR ---
+        const mulberry32 = (a) => () => {
+            let t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const cyrb128 = (str) => {
+            let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
+            for (let i = 0, k; i < str.length; i++) {
+                k = str.charCodeAt(i);
+                h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+                h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+                h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+                h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+            }
+            return [(h1^h2^h3^h4)>>>0];
+        };
+
+        // --- SES SERVİSİ ---
+        const feedback = {
+            play: (freq = 440, type = 'sine', dur = 0.1) => {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(); osc.stop(ctx.currentTime + dur);
+                } catch(e) {}
+            }
+        };
+
+        // --- BİLEŞENLER ---
+
+        const RoosterAvatar = ({ seed, size = 120, className = "", rank = "COMMON" }) => {
+            const assets = useMemo(() => {
+                const s = cyrb128(seed)[0];
+                const rand = mulberry32(s);
+                const palettes = [
+                    { p: '#ff00ff', s: '#00ffff', d: '#0a0a0a' },
+                    { p: '#10b981', s: '#059669', d: '#050505' },
+                    { p: '#fbbf24', s: '#ef4444', d: '#111' }
+                ];
+                const rankAuras = { COMMON: 'none', RARE: '0 0 10px #3b82f6', EPIC: '0 0 15px #a855f7', LEGENDARY: '0 0 20px #eab308' };
+                return {
+                    p: palettes[Math.floor(rand() * palettes.length)],
+                    aura: rankAuras[rank],
+                    dur: 2 + rand() * 2
+                };
+            }, [seed, rank]);
+
+            return (
+                <div className={`relative inline-block ${className}`} style={{ width: size, height: size, filter: `drop-shadow(${assets.aura})` }}>
+                    <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+                        <g style={{ animation: `breathe ${assets.dur}s ease-in-out infinite`, transformOrigin: '50% 80%' }}>
+                            <path d="M30,70 Q50,95 70,70 Q75,45 50,45 Q25,45 30,70" fill={assets.p.d} stroke={assets.p.p} strokeWidth="2" />
+                            <circle cx="50" cy="22" r="12" fill={assets.p.d} stroke={assets.p.p} strokeWidth="2" />
+                            <path d="M42,15 Q50,-5 58,15" fill={assets.p.s} opacity="0.8" />
+                            <path d="M60,22 L75,26 L60,30 Z" fill="#f59e0b" />
+                            <circle cx="56" cy="19" r="2" fill="#fff" />
+                        </g>
+                        <style>{`@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05) translateY(-2px); } }`}</style>
+                    </svg>
+                </div>
+            );
+        };
+
+        // --- MODALLAR ---
+
+        const Modal = ({ title, children, onClose }) => (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                <div className="bg-neutral-900 border border-purple-500 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+                    <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black">
+                        <h3 className="font-bold text-white uppercase tracking-tighter">{title}</h3>
+                        <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
+                    </div>
+                    <div className="p-4 max-h-[70vh] overflow-y-auto">{children}</div>
+                </div>
+            </div>
+        );
+
+        // --- ANA UYGULAMA ---
+
+        const App = () => {
+            const [tab, setTab] = useState('home');
+            const [activeCombat, setActiveCombat] = useState(null);
+            const [isScannerOpen, setIsScannerOpen] = useState(false);
+            const [hatchedRooster, setHatchedRooster] = useState(null);
+            const [adminOpen, setAdminOpen] = useState(false);
+            
+            const [player, setPlayer] = useState(() => {
+                const saved = localStorage.getItem('cyber_rooster_v4');
+                return saved ? JSON.parse(saved) : {
+                    gold: 1000, crystals: 20, level: 1, xp: 0,
+                    inventory: [],
+                    roosters: [{ id: 'r1', name: 'Sokak Dövüşçüsü', rank: 'COMMON', level: 1, energy: 100, seed: Math.random().toString() }]
+                };
+            });
+
+            useEffect(() => { localStorage.setItem('cyber_rooster_v4', JSON.stringify(player)); }, [player]);
+
+            const activeRooster = player.roosters[0];
+
+            // --- AKSİYONLAR ---
+            const addGold = (n) => setPlayer(p => ({ ...p, gold: p.gold + n }));
+            
+            const buyItem = (item) => {
+                if(player.gold < item.price) return alert("Paran yetmez koçum.");
+                setPlayer(p => ({
+                    ...p, 
+                    gold: p.gold - item.price,
+                    inventory: [...p.inventory, { ...item, instanceId: Date.now() }]
+                }));
+                feedback.play(800);
+            };
+
+            const hatchEgg = (egg) => {
+                const newRooster = {
+                    id: 'r' + Date.now(),
+                    name: 'Yeni Nesil #' + Math.floor(Math.random() * 999),
+                    rank: egg.rank,
+                    level: 1,
+                    energy: 100,
+                    seed: Math.random().toString()
+                };
+                setPlayer(p => ({
+                    ...p,
+                    inventory: p.inventory.filter(i => i.instanceId !== egg.instanceId),
+                    roosters: [...p.roosters, newRooster]
+                }));
+                setHatchedRooster(newRooster);
+                feedback.play(1200, 'square', 0.5);
+            };
+
+            const enterArena = (district) => {
+                if(activeRooster.energy < 20) return alert("Horozun pili bitmiş, dinlendir.");
+                setActiveCombat({ district, enemyHP: district.difficulty * 100, playerHP: 100 });
+                setPlayer(p => {
+                    const rs = [...p.roosters];
+                    rs[0].energy -= 20;
+                    return { ...p, roosters: rs };
+                });
+            };
+
+            // --- SAVAŞ EKRANI (Fizik Simülasyonu) ---
+            const CombatArena = ({ combat, onEnd }) => {
+                const canvasRef = useRef(null);
+                const [pull, setPull] = useState(null);
+                const bird = useRef({ x: 100, y: 400, vx: 0, vy: 0, flying: false });
+                const enemy = useRef({ x: 300, y: 150, vx: 2, hp: combat.enemyHP });
+                
+                useEffect(() => {
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    let frame;
+                    
+                    const loop = () => {
+                        ctx.clearRect(0,0, canvas.width, canvas.height);
+                        
+                        // Arka Plan
+                        ctx.strokeStyle = '#1a1a1a';
+                        for(let i=0; i<canvas.width; i+=20) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
+
+                        // Düşman (Boss)
+                        enemy.current.x += enemy.current.vx;
+                        if(enemy.current.x > canvas.width - 40 || enemy.current.x < 40) enemy.current.vx *= -1;
+                        ctx.fillStyle = '#ef4444';
+                        ctx.beginPath(); ctx.arc(enemy.current.x, enemy.current.y, 30, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = '#fff'; ctx.fillText("BOSS", enemy.current.x - 15, enemy.current.y - 40);
+
+                        // Oyuncu (Horoz)
+                        if(bird.current.flying) {
+                            bird.current.vy += 0.25; // Yerçekimi
+                            bird.current.x += bird.current.vx;
+                            bird.current.y += bird.current.vy;
+                            
+                            // Çarpışma Kontrolü
+                            const dist = Math.hypot(bird.current.x - enemy.current.x, bird.current.y - enemy.current.y);
+                            if(dist < 50) {
+                                enemy.current.hp -= 25;
+                                feedback.play(200, 'sawtooth');
+                                bird.current.flying = false;
+                                bird.current.x = 100; bird.current.y = 400;
+                            }
+                            if(bird.current.y > canvas.height || bird.current.x > canvas.width) {
+                                bird.current.flying = false;
+                                bird.current.x = 100; bird.current.y = 400;
+                            }
+                        }
+
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.beginPath(); ctx.arc(bird.current.x, bird.current.y, 20, 0, Math.PI*2); ctx.fill();
+
+                        // Sapan Çizgisi
+                        if(pull) {
+                            ctx.strokeStyle = '#fff';
+                            ctx.beginPath(); ctx.moveTo(100, 400); ctx.lineTo(pull.x, pull.y); ctx.stroke();
+                        }
+
+                        if(enemy.current.hp <= 0) {
+                            cancelAnimationFrame(frame);
+                            return onEnd(true);
+                        }
+                        frame = requestAnimationFrame(loop);
+                    };
+                    loop();
+                    return () => cancelAnimationFrame(frame);
+                }, [pull]);
+
+                return (
+                    <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+                        <div className="p-4 flex justify-between items-center border-b border-white/10">
+                            <span className="text-red-500 font-bold">DÜŞMAN: {enemy.current.hp} HP</span>
+                            <button onClick={() => onEnd(false)} className="bg-neutral-800 px-4 py-1 rounded text-xs">KAÇ</button>
+                        </div>
+                        <canvas 
+                            ref={canvasRef} 
+                            width={window.innerWidth} 
+                            height={window.innerHeight - 100}
+                            className="flex-1 touch-none"
+                            onMouseDown={(e) => setPull({ x: e.clientX, y: e.clientY })}
+                            onMouseMove={(e) => pull && setPull({ x: e.clientX, y: e.clientY })}
+                            onMouseUp={(e) => {
+                                if(!pull) return;
+                                bird.current.vx = (100 - pull.x) * 0.15;
+                                bird.current.vy = (400 - pull.y) * 0.15;
+                                bird.current.flying = true;
+                                setPull(null);
+                                feedback.play(600);
+                            }}
+                        />
+                        <div className="p-4 text-center text-xs text-gray-500 uppercase tracking-widest">ÇEK VE BIRAK: HOROZU FIRLAT!</div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="flex flex-col h-screen max-w-md mx-auto bg-neutral-900 relative shadow-2xl">
+                    {/* Header */}
+                    <header className="h-16 border-b border-white/10 flex items-center justify-between px-4 bg-black shrink-0">
+                        <div className="flex items-center space-x-2" onClick={() => setAdminOpen(true)}>
+                            <div className="w-10 h-10 rounded-full border border-purple-500 flex items-center justify-center font-bold text-purple-400 bg-purple-900/20">{player.level}</div>
+                            <div className="text-xs">
+                                <div className="font-bold text-white uppercase tracking-tighter">PLAYER_01</div>
+                                <div className="text-purple-500">LEVEL_UP_READY</div>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-yellow-500 font-bold text-sm leading-none">{player.gold}G</div>
+                            <div className="text-cyan-400 font-bold text-xs mt-1">{player.crystals}💎</div>
+                        </div>
+                    </header>
+
+                    {/* Content */}
+                    <main className="flex-1 overflow-y-auto pb-24 relative">
+                        {tab === 'home' && (
+                            <div className="p-6 flex flex-col items-center animate-slide-up">
+                                <RoosterAvatar seed={activeRooster.seed} size={220} rank={activeRooster.rank} />
+                                <h2 className="text-3xl font-black mt-4 uppercase italic glitch-text tracking-tighter">{activeRooster.name}</h2>
+                                <div className="w-full mt-6 space-y-4">
+                                    <div className="bg-black/50 p-4 rounded-xl border border-white/5 shadow-inner">
+                                        <div className="flex justify-between text-[10px] uppercase font-bold mb-1"><span>Enerji</span><span>{activeRooster.energy}%</span></div>
+                                        <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-gradient-to-r from-purple-600 to-pink-500" style={{ width: `${activeRooster.energy}%` }}></div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={() => addGold(50)} className="bg-neutral-800 border border-white/10 p-4 rounded-xl active:scale-95 transition-transform">
+                                            <div className="text-2xl mb-1">🏋️</div>
+                                            <div className="text-[10px] font-bold uppercase">Antrenman</div>
+                                        </button>
+                                        <button onClick={() => setIsScannerOpen(true)} className="bg-blue-900/20 border border-blue-500/50 p-4 rounded-xl active:scale-95 transition-transform">
+                                            <div className="text-2xl mb-1">📷</div>
+                                            <div className="text-[10px] font-bold uppercase">Siber Tara</div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'city' && (
+                            <div className="p-4 space-y-4">
+                                <h2 className="text-2xl font-black text-purple-400 mb-2 uppercase italic tracking-tighter">Savaş Bölgeleri</h2>
+                                {DISTRICTS.map(d => (
+                                    <div key={d.id} className="bg-black border border-white/10 p-4 rounded-xl hover:border-purple-500 transition-colors">
+                                        <div className="flex justify-between">
+                                            <h3 className="font-bold text-lg text-white">{d.name}</h3>
+                                            <span className="text-[10px] bg-red-900 text-red-200 px-2 py-1 rounded">LVL {d.difficulty}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 my-2">{d.description}</p>
+                                        <button onClick={() => enterArena(d)} className="w-full mt-2 py-2 bg-purple-600 text-white font-bold rounded text-xs uppercase hover:bg-purple-500">Arenaya Gir</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {tab === 'market' && (
+                            <div className="p-4 space-y-6">
+                                <div>
+                                    <h3 className="text-xs font-bold text-yellow-500 uppercase mb-3 tracking-widest">Yiyecekler</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {ITEMS.filter(i => i.type === 'FOOD').map(i => (
+                                            <div key={i.id} className="bg-neutral-800 border border-white/5 p-4 rounded-xl text-center">
+                                                <div className="text-2xl mb-2">{i.icon}</div>
+                                                <div className="text-xs font-bold text-white">{i.name}</div>
+                                                <div className="text-yellow-500 font-bold text-xs mt-1">{i.price}G</div>
+                                                <button onClick={() => buyItem(i)} className="w-full mt-3 py-1 bg-white text-black font-bold text-[10px] rounded">AL</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-bold text-purple-500 uppercase mb-3 tracking-widest">Yumurtalar</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {ITEMS.filter(i => i.type === 'EGG').map(i => (
+                                            <div key={i.id} className="bg-neutral-800 border border-purple-500/30 p-4 rounded-xl text-center">
+                                                <div className="text-2xl mb-2">{i.icon}</div>
+                                                <div className="text-xs font-bold text-white">{i.name}</div>
+                                                <div className="text-yellow-500 font-bold text-xs mt-1">{i.price}G</div>
+                                                <button onClick={() => buyItem(i)} className="w-full mt-3 py-1 bg-purple-600 text-white font-bold text-[10px] rounded">AL</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'inventory' && (
+                            <div className="p-4">
+                                <h2 className="text-2xl font-black text-white mb-4 uppercase italic tracking-tighter">Çantam</h2>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {player.inventory.map(item => (
+                                        <div key={item.instanceId} className="bg-neutral-800 border border-white/10 p-4 rounded-xl text-center">
+                                            <div className="text-2xl mb-2">{item.icon}</div>
+                                            <div className="text-xs font-bold text-white mb-2">{item.name}</div>
+                                            {item.type === 'EGG' ? (
+                                                <button onClick={() => hatchEgg(item)} className="w-full py-2 bg-green-600 text-white font-bold text-[10px] rounded uppercase">Çatlat</button>
+                                            ) : (
+                                                <button className="w-full py-2 bg-neutral-700 text-gray-400 font-bold text-[10px] rounded uppercase">Kullan</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {player.inventory.length === 0 && <p className="col-span-2 text-center text-gray-600 py-12">Çantan boş, pazar yoluna düş.</p>}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Nav */}
+                    <nav className="h-20 bg-black border-t border-white/10 flex justify-around items-center px-4 shrink-0 z-[50]">
+                        {[
+                            { id: 'home', icon: '🏠', l: 'Kümes' },
+                            { id: 'city', icon: '🏙️', l: 'Şehir' },
+                            { id: 'market', icon: '🛒', l: 'Pazar' },
+                            { id: 'inventory', icon: '🎒', l: 'Çanta' }
+                        ].map(it => (
+                            <button key={it.id} onClick={() => setTab(it.id)} className={`flex flex-col items-center transition-all ${tab === it.id ? 'text-purple-500 scale-110' : 'text-gray-600'}`}>
+                                <span className="text-2xl">{it.icon}</span>
+                                <span className="text-[9px] font-bold uppercase mt-1 tracking-tighter">{it.l}</span>
+                            </button>
+                        ))}
+                    </nav>
+
+                    {/* Modallar */}
+                    {activeCombat && (
+                        <CombatArena 
+                            combat={activeCombat} 
+                            onEnd={(win) => {
+                                if(win) { addGold(activeCombat.district.difficulty * 200); alert("KAZANDIN! Ödül: " + (activeCombat.district.difficulty * 200) + "G"); }
+                                setActiveCombat(null);
+                            }} 
+                        />
+                    )}
+
+                    {isScannerOpen && (
+                        <Modal title="Siber Tarayıcı" onClose={() => setIsScannerOpen(false)}>
+                            <div className="flex flex-col items-center py-6">
+                                <div className="w-32 h-32 border-2 border-cyan-500 rounded-full animate-pulse flex items-center justify-center mb-4 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-cyan-500 opacity-10"></div>
+                                    <span className="text-4xl">📸</span>
+                                </div>
+                                <p className="text-xs text-center text-gray-500 mb-6">Ortamdaki siber veriler taranıyor...</p>
+                                <button onClick={() => { addGold(100); setIsScannerOpen(false); alert("Veri sızıntısı bulundu! +100G"); }} className="w-full py-3 bg-cyan-600 text-white font-bold rounded uppercase text-xs">Taramayı Başlat</button>
+                            </div>
+                        </Modal>
+                    )}
+
+                    {hatchedRooster && (
+                        <Modal title="Yumurta Çatladı!" onClose={() => setHatchedRooster(null)}>
+                            <div className="flex flex-col items-center py-6">
+                                <RoosterAvatar seed={hatchedRooster.seed} size={150} rank={hatchedRooster.rank} />
+                                <h3 className="text-2xl font-bold mt-4 text-purple-400 uppercase italic tracking-tighter">{hatchedRooster.name}</h3>
+                                <p className="text-xs text-gray-500 mt-2">İmparatorluğa hoş geldin, tüyün kadar altın bulasın.</p>
+                                <button onClick={() => setHatchedRooster(null)} className="w-full mt-6 py-3 bg-white text-black font-bold rounded uppercase text-xs">Yaşasın!</button>
+                            </div>
+                        </Modal>
+                    )}
+
+                    {adminOpen && (
+                        <Modal title="Geliştirici Konsolu" onClose={() => setAdminOpen(false)}>
+                            <div className="space-y-4">
+                                <button onClick={() => addGold(5000)} className="w-full py-2 bg-green-600 text-white font-bold text-xs">+5000 ALTIN EKLE</button>
+                                <button onClick={() => setPlayer(p => ({...p, level: p.level + 1}))} className="w-full py-2 bg-blue-600 text-white font-bold text-xs">LEVEL ATLAT</button>
+                                <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full py-2 bg-red-600 text-white font-bold text-xs">SİSTEMİ SIFIRLA</button>
+                            </div>
+                        </Modal>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>

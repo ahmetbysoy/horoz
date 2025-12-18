@@ -6,9 +6,9 @@ export const ContentGenerator = {
   generateRoosterName: (): string => {
     const prefixes = [
       "Cyber", "Neo", "Siber", "Jilet", "Rüzgar", "Tekno", "Vortex", "Biyos", 
-      "Krom", "Flaş", "Gölge", "Asit", "Metal", "Yıkıcı", "Turbo", "Lazer", "Meka"
+      "Krom", "Flaş", "Gölge", "Asit", "Metal", "Yıkıcı", "Turbo", "Lazer", "Meka", "Nitro"
     ];
-    const suffix = ["X-1", "V2", "Prime", "Zero", "Alpha", "Slayer", "Ghost", "Titan", "Core", "9000", "Pro"];
+    const suffix = ["X-1", "V2", "Prime", "Zero", "Alpha", "Slayer", "Ghost", "Titan", "Core", "9000", "Pro", "MK-II"];
     
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const roosterName = ROOSTER_NAMES[Math.floor(Math.random() * ROOSTER_NAMES.length)];
@@ -22,7 +22,7 @@ export const ContentGenerator = {
       "Sinyal Bozucu", "Aşırı Voltaj", "Sokak Bilgesi", "Metalik Zırh", 
       "Gözü Kara", "Hızlı Pençe", "Gece Görüşü", "Veri Hırsızı",
       "Kablolu Bağlantı", "Siber Öfke", "Nanobot Onarımı", "Turbo Motor",
-      "Termal Görüş", "Şok Dalgası", "Pasif Soğutma", "Optik Kamuflaj"
+      "Termal Görüş", "Şok Dalgası", "Pasif Soğutma", "Optik Kamuflaj", "Sismik Darbe"
     ];
     const result: string[] = [];
     while(result.length < count) {
@@ -35,37 +35,37 @@ export const ContentGenerator = {
   generateNewsHeadline: (currentEvent: GlobalEventType = GlobalEventType.NONE): string => {
     const eventTemplates: Record<GlobalEventType, string[]> = {
       [GlobalEventType.NONE]: [
-        "SON DAKİKA: {district} bölgesinde siber devriyeler artırıldı.",
-        "EKONOMİ: Kristal piyasası bugün durgun, yatırımcılar beklemede.",
-        "TURNUVA: {district} arenasında büyük bahis gecesi başlıyor!",
-        "İLAN: {name} adlı horozun sahibi her düelloyu kazanıyor!",
-        "SÖYLENTİ: Yeraltı metrosunda efsanevi bir yumurta görüldü.",
-        "TEKNOLOJİ: Yeni nesil çelik mahmuzlar Karaköy'e ulaştı.",
-        "METEOROLOJİ: Şehir üzerinde asit yağmuru bekleniyor, horozları içeride tutun."
+        "HABER: {district} arenasında yeni bir şampiyon doğuyor!",
+        "EKONOMİ: Kristal piyasası bu sabah %{percent} değer kazandı.",
+        "SON DAKİKA: {name} isimli horoz, dün gece 5 dövüş üst üste kazandı!",
+        "TEKNOLOJİ: Karaköy'de yeni nesil sibernetik kanatlar satışa sunuldu.",
+        "SÖYLENTİ: Yeraltı arenalarında efsanevi bir 'Altın Horoz' görüldüğü konuşuluyor.",
+        "UYARI: {district} bölgesinde siber devriyeler sıkılaştırıldı.",
+        "İLAN: Kayıp horozunu bulana 1000G ödül vaat ediliyor."
       ],
       [GlobalEventType.CYBER_ATTACK]: [
-        "SİBER SALDIRI! Terminal bağlantıları kararsız, cüzdanlar risk altında.",
-        "KRİTİK HATA: Sistem stabilitesi %{percent} düştü!",
-        "GÜVENLİK İHLALİ: {district} veri merkezine sızıldı!",
-        "DİKKAT: Enerji dalgalanmaları horozların çiplerini etkiliyor."
+        "SİBER SALDIRI! Şehir ağları kararsız, cüzdanlarınızı koruyun!",
+        "KRİTİK HATA: Terminal bağlantıları %{percent} oranında kesildi.",
+        "BASKIN: Hacker grupları {district} veri merkezine sızdı!",
+        "DİKKAT: Enerji dalgalanmaları horozların çiplerini etkileyebilir."
       ],
       [GlobalEventType.MARKET_CRASH]: [
-        "PİYASA ÇÖKTÜ! Altın rezervleri eriyor, esnaf barter sistemine döndü.",
-        "ENFLASYON ŞOKU: Yem fiyatları %{percent} zamlandı!",
-        "EKONOMİ: {district} pazarında kristal kıtlığı yaşanıyor.",
-        "KAOS: Banka önlerinde uzun kuyruklar oluştu, sistem çöktü."
+        "PİYASA ÇÖKTÜ! Altın rezervleri %{percent} eridi.",
+        "KAOS: Esnaf kristal yerine takas sistemine geçmeyi düşünüyor.",
+        "EKONOMİ: {district} bölgesinde kristal madenciliği durduruldu.",
+        "ENFLASYON: Yem fiyatlarına gece yarısı büyük zam geldi!"
       ],
       [GlobalEventType.POLICE_RAID]: [
-        "BASKIN! {district} arenası mühürlendi, horoz sahipleri kaçıyor.",
-        "OPERASYON: Emniyet güçleri illegal çiplerin peşinde.",
-        "SIKI DENETİM: Şehir genelinde kalkan protokolü devreye alındı.",
-        "İHBAR: {name} adlı horozun illegal implantları tespit edildi."
+        "BASKIN! {district} arenası mühürlendi, horoz sahipleri sorgulanıyor.",
+        "OPERASYON: Siber-polis illegal implantların peşinde.",
+        "SIKI DENETİM: Şehir giriş-çıkışlarında kalkan protokolü aktif edildi.",
+        "İHBAR: {name} isimli horozun illegal modifiye edildiği tespit edildi!"
       ],
       [GlobalEventType.BOUNTY_HUNT]: [
-        "AV BAŞLADI! {district} arenasında her kafa için ekstra altın.",
-        "ÖDÜL: {name} horozunu yenene 500G nakit para!",
-        "BONUS: Bu gece kazanılan XP miktarı %50 artırıldı.",
-        "BAHİS: Şehirdeki tüm yeraltı arenaları ödül havuzunu birleştirdi."
+        "AV MEVSİMİ: {district} arenasında her zafer için 2x Altın ödülü!",
+        "ÖDÜL: {name} horozunu yenene 500G nakit ödül verilecek.",
+        "BONUS: Bu gece kazanılan tüm XP miktarları %50 artırıldı!",
+        "İLAN: Ödül avcıları yeraltı arenalarında cirit atıyor."
       ]
     };
 
@@ -83,7 +83,7 @@ export const ContentGenerator = {
 
   getCommentary: (type: 'START' | 'HIT' | 'CRITICAL' | 'MISS' | 'SPECIAL' | 'WIN'): string => {
     const list = COMMENTARY[type];
-    if (!list) return "Tribünler ayağa kalktı!";
+    if (!list) return "Tribünler heyecanla bekliyor!";
     return list[Math.floor(Math.random() * list.length)];
   },
 
@@ -91,31 +91,31 @@ export const ContentGenerator = {
     return [
       {
         id: `daily_${Date.now()}_1`,
-        title: 'Sabah İdmanı',
-        description: 'Horozunu 2 kez antrenman yaptır.',
+        title: 'Sabah Sporu',
+        description: 'Horozunu bugün 2 kez antrenman yaptır.',
         type: TaskType.DAILY,
         requirement: { type: 'train', target: 2, current: 0 },
-        reward: { gold: 80 * playerLevel, crystals: 1, xp: 40 },
+        reward: { gold: 100 * playerLevel, crystals: 2, xp: 50 },
         completed: false,
         claimed: false
       },
       {
         id: `daily_${Date.now()}_2`,
-        title: 'Sokak Dövüşçüsü',
+        title: 'Gladyatör',
         description: 'Herhangi bir arenada 1 dövüş kazan.',
         type: TaskType.DAILY,
         requirement: { type: 'fight', target: 1, current: 0 },
-        reward: { gold: 150 * playerLevel, crystals: 3, xp: 80 },
+        reward: { gold: 200 * playerLevel, crystals: 5, xp: 100 },
         completed: false,
         claimed: false
       },
        {
         id: `daily_${Date.now()}_3`,
-        title: 'Veri Madenciliği',
-        description: '2 reklam izleyerek sistemi destekle.',
+        title: 'Veri Madencisi',
+        description: 'Sistem koruması için 2 reklam izle.',
         type: TaskType.DAILY,
         requirement: { type: 'earn', target: 2, current: 0 },
-        reward: { gold: 50, crystals: 8, xp: 10 },
+        reward: { gold: 50, crystals: 10, xp: 20 },
         completed: false,
         claimed: false
       }
