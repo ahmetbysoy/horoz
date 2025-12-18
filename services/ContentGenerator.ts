@@ -4,12 +4,15 @@ import { Task, TaskType, GlobalEventType } from '../types';
 export const ContentGenerator = {
   
   generateRoosterName: (): string => {
-    const prefixes = ["Neo", "Siber", "Jilet", "Rüzgar", "Hızlı", "Zalim", "Tekno", "Vortex", "Biyos", "Krom", "Flaş", "Gölge", "Asit"];
-    const suffix = ["X-1", "V2", "Prime", "Zero", "Alpha", "Slayer", "Ghost", "Titan", "Core"];
+    const prefixes = [
+      "Cyber", "Neo", "Siber", "Jilet", "Rüzgar", "Tekno", "Vortex", "Biyos", 
+      "Krom", "Flaş", "Gölge", "Asit", "Metal", "Yıkıcı", "Turbo", "Lazer", "Meka"
+    ];
+    const suffix = ["X-1", "V2", "Prime", "Zero", "Alpha", "Slayer", "Ghost", "Titan", "Core", "9000", "Pro"];
     
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const roosterName = ROOSTER_NAMES[Math.floor(Math.random() * ROOSTER_NAMES.length)];
-    const useSuffix = Math.random() > 0.7;
+    const useSuffix = Math.random() > 0.6;
 
     return `${prefix} ${roosterName}${useSuffix ? ' ' + suffix[Math.floor(Math.random() * suffix.length)] : ''}`;
   },
@@ -19,7 +22,7 @@ export const ContentGenerator = {
       "Sinyal Bozucu", "Aşırı Voltaj", "Sokak Bilgesi", "Metalik Zırh", 
       "Gözü Kara", "Hızlı Pençe", "Gece Görüşü", "Veri Hırsızı",
       "Kablolu Bağlantı", "Siber Öfke", "Nanobot Onarımı", "Turbo Motor",
-      "Termal Görüş", "Şok Dalgası", "Pasif Soğutma"
+      "Termal Görüş", "Şok Dalgası", "Pasif Soğutma", "Optik Kamuflaj"
     ];
     const result: string[] = [];
     while(result.length < count) {
@@ -37,13 +40,14 @@ export const ContentGenerator = {
         "TURNUVA: {district} arenasında büyük bahis gecesi başlıyor!",
         "İLAN: {name} adlı horozun sahibi her düelloyu kazanıyor!",
         "SÖYLENTİ: Yeraltı metrosunda efsanevi bir yumurta görüldü.",
-        "TEKNOLOJİ: Yeni nesil çelik mahmuzlar Karaköy'e ulaştı."
+        "TEKNOLOJİ: Yeni nesil çelik mahmuzlar Karaköy'e ulaştı.",
+        "METEOROLOJİ: Şehir üzerinde asit yağmuru bekleniyor, horozları içeride tutun."
       ],
       [GlobalEventType.CYBER_ATTACK]: [
         "SİBER SALDIRI! Terminal bağlantıları kararsız, cüzdanlar risk altında.",
         "KRİTİK HATA: Sistem stabilitesi %{percent} düştü!",
         "GÜVENLİK İHLALİ: {district} veri merkezine sızıldı!",
-        "DİKKAT: Enerji dalgalanmaları horozların modunu bozuyor."
+        "DİKKAT: Enerji dalgalanmaları horozların çiplerini etkiliyor."
       ],
       [GlobalEventType.MARKET_CRASH]: [
         "PİYASA ÇÖKTÜ! Altın rezervleri eriyor, esnaf barter sistemine döndü.",
