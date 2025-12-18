@@ -1,1 +1,0 @@
-// Tek dosya yapısına geçildi.
