@@ -10,6 +10,7 @@ import { HatchingModal } from '../components/HatchingModal';
 import { BreedingModal } from '../components/BreedingModal';
 import { useToast } from '../context/ToastContext';
 import { NewsTicker } from '../components/NewsTicker';
+import { MarketIntelPanel } from '../components/MarketIntelPanel';
 import { feedbackService } from '../services/feedbackService';
 import { Rooster } from '../types';
 
@@ -166,6 +167,10 @@ export const HomeScreen: React.FC = () => {
              </div>
           </div>
         )}
+
+        <div className="w-full mb-6">
+          <MarketIntelPanel economy={economy} />
+        </div>
 
         <div className="relative w-full flex items-center justify-center py-2">
             {roosters.length > 1 && (
