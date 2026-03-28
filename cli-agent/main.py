@@ -1,8 +1,11 @@
+import sys
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
 from agent.core import Agent
+from agent.self_test import run_self_test
 from setup_wizard import check_setup, run_setup_wizard
 
 app = typer.Typer(help="Open-source CLI AI Agent")
@@ -18,7 +21,7 @@ def chat(
     safe_mode: bool = typer.Option(True, help="Require confirmations for risky tools"),
     stream: bool = typer.Option(False, help="Enable streaming output"),
 ) -> None:
-    console.print(Panel("🤖 CLI Agent v0.4\nType /quit to exit.", title="Welcome"))
+    console.print(Panel("🤖 CLI Agent v0.5\nType /quit to exit.", title="Welcome"))
 
     if not check_setup():
         run_setup_wizard()
@@ -61,5 +64,12 @@ def chat(
         agent.run(user_input, stream=stream)
 
 
+@app.command("self-test")
+def self_test() -> None:
+    raise typer.Exit(code=run_self_test())
+
+
 if __name__ == "__main__":
+    if "--test" in sys.argv:
+        raise SystemExit(run_self_test())
     app()
