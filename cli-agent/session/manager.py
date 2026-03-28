@@ -23,4 +23,21 @@ class SessionManager:
         return json.loads(path.read_text(encoding="utf-8"))
 
     def list_sessions(self) -> list[str]:
-        return sorted([p.stem for p in self.session_dir.glob("*.json")], reverse=True)
+        return [item["id"] for item in self.list_sessions_with_meta()]
+
+    def list_sessions_with_meta(self) -> list[dict]:
+        sessions = []
+        for p in self.session_dir.glob("*.json"):
+            sessions.append(
+                {
+                    "id": p.stem,
+                    "path": str(p),
+                    "modified": datetime.utcfromtimestamp(p.stat().st_mtime).isoformat(timespec="seconds"),
+                }
+            )
+        sessions.sort(key=lambda s: s["modified"], reverse=True)
+        return sessions
+
+    def latest_session_id(self) -> str | None:
+        sessions = self.list_sessions_with_meta()
+        return sessions[0]["id"] if sessions else None

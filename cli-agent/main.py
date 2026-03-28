@@ -12,18 +12,25 @@ console = Console()
 @app.command()
 def chat(
     resume: str | None = typer.Option(None, help="Resume a saved session"),
+    resume_latest: bool = typer.Option(False, help="Resume the most recent session"),
     model: str | None = typer.Option(None, help="Force a specific model"),
     verbose: bool = typer.Option(False, help="Show debug info"),
     safe_mode: bool = typer.Option(True, help="Require confirmations for risky tools"),
     stream: bool = typer.Option(False, help="Enable streaming output"),
 ) -> None:
-    console.print(Panel("🤖 CLI Agent v0.3\nType /quit to exit.", title="Welcome"))
+    console.print(Panel("🤖 CLI Agent v0.4\nType /quit to exit.", title="Welcome"))
 
     if not check_setup():
         run_setup_wizard()
         return
 
     agent = Agent(model=model, verbose=verbose, safe_mode=safe_mode)
+
+    if resume_latest and not resume:
+        latest = agent.session_manager.latest_session_id()
+        if latest:
+            resume = latest
+
     if resume:
         agent.load_session(resume)
 
@@ -41,7 +48,8 @@ def chat(
             agent.show_history()
             continue
         if cmd == "/sessions":
-            print("\n".join(agent.session_manager.list_sessions()))
+            for item in agent.session_manager.list_sessions_with_meta():
+                print(f"{item['id']} | {item['modified']}")
             continue
         if cmd == "/export":
             print(agent.export_current_session_markdown())
