@@ -1,7 +1,9 @@
 from agent.loop import run_agent_loop
 from agent.memory import MemoryManager
+from agent.output_control import control_output
 from agent.permission import PermissionManager
 from agent.state import AgentState
+from config.loader import load_settings
 from router.model_router import SmartRouter
 from session.export import export_markdown
 from session.manager import SessionManager
@@ -23,6 +25,8 @@ class Agent:
         self.logger = AgentLogger(verbose=verbose)
         self.tokens = TokenTracker()
         self.session_id = self.session_manager.new_session_id()
+        settings = load_settings()
+        self.max_output_words = settings.get("limits", {}).get("max_output_tokens", 2000)
 
     def run(self, user_input: str, stream: bool = False) -> None:
         self.memory.add("user", user_input)
@@ -41,6 +45,7 @@ class Agent:
                 tool_executor=self.tools,
             )
 
+        output = control_output(output, max_words=self.max_output_words)
         self.memory.add("assistant", output)
         self.tokens.add(in_tokens=0, out_tokens=len(output.split()))
         self.logger.log_model_call(provider="router", success=True)
