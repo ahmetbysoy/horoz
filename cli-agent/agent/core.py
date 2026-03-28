@@ -3,6 +3,7 @@ from agent.memory import MemoryManager
 from agent.permission import PermissionManager
 from agent.state import AgentState
 from router.model_router import SmartRouter
+from session.export import export_markdown
 from session.manager import SessionManager
 from telemetry.logger import AgentLogger
 from telemetry.token_tracker import TokenTracker
@@ -23,24 +24,38 @@ class Agent:
         self.tokens = TokenTracker()
         self.session_id = self.session_manager.new_session_id()
 
-    def run(self, user_input: str) -> None:
+    def run(self, user_input: str, stream: bool = False) -> None:
         self.memory.add("user", user_input)
         self.tokens.add(in_tokens=len(user_input.split()), out_tokens=0)
 
-        output = run_agent_loop(
-            user_input=user_input,
-            state=self.state,
-            memory=self.memory,
-            tools_text=self.tools.schemas_as_text(),
-            router=self.router,
-            permission=self.permission,
-            tool_executor=self.tools,
-        )
+        if stream:
+            output = self._run_stream(user_input)
+        else:
+            output = run_agent_loop(
+                user_input=user_input,
+                state=self.state,
+                memory=self.memory,
+                tools_text=self.tools.schemas_as_text(),
+                router=self.router,
+                permission=self.permission,
+                tool_executor=self.tools,
+            )
 
         self.memory.add("assistant", output)
         self.tokens.add(in_tokens=0, out_tokens=len(output.split()))
         self.logger.log_model_call(provider="router", success=True)
-        print(output)
+        if not stream:
+            print(output)
+
+    def _run_stream(self, user_input: str) -> str:
+        task_type = self.router.detect_task_type(user_input)
+        full = ""
+        for chunk in self.router.stream(user_input, task_type=task_type):
+            print(chunk, end="", flush=True)
+            full += chunk
+        print()
+        self.state.status = "completed"
+        return full
 
     def save_session(self) -> None:
         payload = {
@@ -65,6 +80,9 @@ class Agent:
         self.tokens.output_tokens = usage.get("output_tokens", 0)
         self.tokens.calls = usage.get("calls", 0)
         print(f"[Session] loaded: {session_id}")
+
+    def export_current_session_markdown(self) -> str:
+        return export_markdown(self.memory.messages)
 
     def show_history(self) -> None:
         for msg in self.memory.get_recent():

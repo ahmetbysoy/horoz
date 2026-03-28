@@ -40,3 +40,8 @@ class OllamaProvider(BaseProvider):
             return data["message"]["content"]
         except (KeyError, TypeError) as exc:
             raise ProviderError(f"Ollama response parse failed: {exc}") from exc
+
+
+    def chat_stream(self, messages: list[dict[str, str]]):
+        content = self.chat(messages)
+        yield content

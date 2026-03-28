@@ -42,3 +42,8 @@ class OpenRouterProvider(BaseProvider):
             return data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
             raise ProviderError(f"OpenRouter response parse failed: {exc}") from exc
+
+
+    def chat_stream(self, messages: list[dict[str, str]]):
+        content = self.chat(messages)
+        yield content

@@ -1,5 +1,3 @@
-def stream_chunks(chunks):
-    text = ""
-    for chunk in chunks:
-        text += chunk
-        yield text
+def stream_text_chunks(text: str, chunk_size: int = 30):
+    for i in range(0, len(text), chunk_size):
+        yield text[i : i + chunk_size]

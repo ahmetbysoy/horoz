@@ -9,6 +9,7 @@ from providers.ollama import OllamaProvider
 from providers.openrouter import OpenRouterProvider
 from providers.together import TogetherProvider
 from router.retry import retry_with_backoff
+from router.streaming import stream_text_chunks
 
 
 class SmartRouter:
@@ -53,6 +54,27 @@ class SmartRouter:
                 continue
 
         return "Tüm provider çağrıları başarısız oldu."
+
+    def stream(self, prompt: str, task_type: str = "chat"):
+        if self.force_model:
+            yield from stream_text_chunks(f"[MOCK:{self.force_model}] {prompt[:200]}")
+            return
+
+        route = self._route(task_type)
+        for provider_name in route:
+            provider = self.providers[provider_name]
+            if not provider.is_available():
+                continue
+            try:
+                if hasattr(provider, "chat_stream"):
+                    yield from provider.chat_stream([{"role": "user", "content": prompt}])
+                else:
+                    yield from stream_text_chunks(provider.chat([{"role": "user", "content": prompt}]))
+                return
+            except Exception:
+                continue
+
+        yield "Tüm provider çağrıları başarısız oldu."
 
     def _route(self, task_type: str) -> list[str]:
         mapping = {

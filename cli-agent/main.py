@@ -15,8 +15,9 @@ def chat(
     model: str | None = typer.Option(None, help="Force a specific model"),
     verbose: bool = typer.Option(False, help="Show debug info"),
     safe_mode: bool = typer.Option(True, help="Require confirmations for risky tools"),
+    stream: bool = typer.Option(False, help="Enable streaming output"),
 ) -> None:
-    console.print(Panel("🤖 CLI Agent v0.2\nType /quit to exit.", title="Welcome"))
+    console.print(Panel("🤖 CLI Agent v0.3\nType /quit to exit.", title="Welcome"))
 
     if not check_setup():
         run_setup_wizard()
@@ -42,8 +43,11 @@ def chat(
         if cmd == "/sessions":
             print("\n".join(agent.session_manager.list_sessions()))
             continue
+        if cmd == "/export":
+            print(agent.export_current_session_markdown())
+            continue
 
-        agent.run(user_input)
+        agent.run(user_input, stream=stream)
 
 
 if __name__ == "__main__":
