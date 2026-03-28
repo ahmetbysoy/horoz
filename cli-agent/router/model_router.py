@@ -1,3 +1,4 @@
+from config.loader import load_settings
 from providers.cloudflare import CloudflareWorkersAIProvider
 from providers.cohere import CohereProvider
 from providers.deepseek import DeepSeekProvider
@@ -23,17 +24,14 @@ class SmartRouter:
             "cloudflare": CloudflareWorkersAIProvider(),
             "ollama": OllamaProvider(),
         }
-        self.default_order = [
-            "groq",
-            "gemini",
-            "deepseek",
-            "together",
-            "openrouter",
-            "huggingface",
-            "cohere",
-            "cloudflare",
-            "ollama",
-        ]
+        settings = load_settings()
+        provider_cfg = settings.get("providers", {})
+
+        enabled = [name for name in self.providers if provider_cfg.get(name, {}).get("enabled", True)]
+        self.default_order = sorted(
+            enabled,
+            key=lambda name: provider_cfg.get(name, {}).get("priority", 100),
+        )
 
     def call(self, prompt: str, task_type: str = "chat") -> str:
         if self.force_model:
@@ -58,7 +56,7 @@ class SmartRouter:
             "long_context": ["gemini", "together", "openrouter", "ollama"],
             "embedding": ["cohere", "huggingface", "ollama"],
         }
-        prioritized = mapping.get(task_type, [])
+        prioritized = [p for p in mapping.get(task_type, []) if p in self.default_order]
         remaining = [p for p in self.default_order if p not in prioritized]
         return prioritized + remaining
 
