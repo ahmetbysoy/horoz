@@ -46,6 +46,9 @@ def chat(
         if cmd == "/export":
             print(agent.export_current_session_markdown())
             continue
+        if cmd == "/stats":
+            print(agent.stats())
+            continue
 
         agent.run(user_input, stream=stream)
 

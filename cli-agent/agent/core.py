@@ -26,9 +26,16 @@ class Agent:
         self.tokens = TokenTracker()
         self.session_id = self.session_manager.new_session_id()
         settings = load_settings()
-        self.max_output_words = settings.get("limits", {}).get("max_output_tokens", 2000)
+        limits = settings.get("limits", {})
+        self.max_output_words = limits.get("max_output_tokens", 2000)
+        self.session_token_budget = limits.get("session_token_budget", 100000)
 
     def run(self, user_input: str, stream: bool = False) -> None:
+        if self.tokens.exceeded(self.session_token_budget):
+            print("[Budget] Session token budget exceeded. Start a new session or summarize context.")
+            self.state.status = "stopped"
+            return
+
         self.memory.add("user", user_input)
         self.tokens.add(in_tokens=len(user_input.split()), out_tokens=0)
 
@@ -88,6 +95,14 @@ class Agent:
 
     def export_current_session_markdown(self) -> str:
         return export_markdown(self.memory.messages)
+
+    def stats(self) -> dict:
+        return {
+            "session_id": self.session_id,
+            "state": self.state.status,
+            "token_usage": self.tokens.snapshot(),
+            "budget": self.session_token_budget,
+        }
 
     def show_history(self) -> None:
         for msg in self.memory.get_recent():
