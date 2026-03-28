@@ -8,6 +8,7 @@ from providers.huggingface import HuggingFaceProvider
 from providers.ollama import OllamaProvider
 from providers.openrouter import OpenRouterProvider
 from providers.together import TogetherProvider
+from router.retry import retry_with_backoff
 
 
 class SmartRouter:
@@ -32,6 +33,7 @@ class SmartRouter:
             enabled,
             key=lambda name: provider_cfg.get(name, {}).get("priority", 100),
         )
+        self.max_retries = settings.get("routing", {}).get("max_retries_per_provider", 2)
 
     def call(self, prompt: str, task_type: str = "chat") -> str:
         if self.force_model:
@@ -43,7 +45,10 @@ class SmartRouter:
             if not provider.is_available():
                 continue
             try:
-                return provider.chat([{"role": "user", "content": prompt}])
+                return retry_with_backoff(
+                    lambda: provider.chat([{"role": "user", "content": prompt}]),
+                    max_attempts=self.max_retries,
+                )
             except Exception:
                 continue
 
