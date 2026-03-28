@@ -1,0 +1,34 @@
+providers:
+  groq:
+    enabled: true
+    priority: 1
+    use_for: ["fast", "chat"]
+  gemini:
+    enabled: true
+    priority: 2
+    use_for: ["long_context", "multimodal"]
+  openrouter:
+    enabled: true
+    priority: 3
+    use_for: ["fallback"]
+  ollama:
+    enabled: true
+    priority: 9
+    use_for: ["offline", "local"]
+
+routing:
+  strategy: smart
+  task_detection: true
+  auto_fallback: true
+  max_retries_per_provider: 2
+
+limits:
+  max_input_tokens: 6000
+  max_output_tokens: 2000
+  session_token_budget: 100000
+  session_api_call_budget: 500
+
+security:
+  allowed_directories: ["."]
+  require_confirmation: true
+  tool_timeout_sec: 15
