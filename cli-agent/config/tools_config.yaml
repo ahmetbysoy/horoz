@@ -1,0 +1,12 @@
+file_read:
+  enabled: true
+  requires_permission: true
+file_write:
+  enabled: true
+  requires_permission: true
+file_edit:
+  enabled: true
+  requires_permission: true
+run_shell:
+  enabled: true
+  requires_permission: true
